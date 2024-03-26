@@ -152,10 +152,25 @@ vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 10
+vim.opt.scrolloff = 5
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
+
+-- fz: Remaps for dealing with word wrap navigation
+-- fz: modified mode from 'n' to '' - https://vimhelp.org/map.txt.html#map-overview
+vim.keymap.set('', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
+vim.keymap.set('', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
+
+-- fz: further mods allow display line movement for Up/Down/Home/End in normal, visual and insert modes
+vim.keymap.set('', '<Up>', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
+vim.keymap.set('', '<Down>', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
+vim.keymap.set('i', '<Up>', '<C-o>gk', { silent = true })
+vim.keymap.set('i', '<Down>', '<C-o>gj', { silent = true })
+vim.keymap.set('i', '<Home>', '<C-o>g^', { silent = true })
+vim.keymap.set('i', '<End>', '<C-o>g$', { silent = true })
+vim.keymap.set('', '<Home>', 'g^', { silent = true })
+vim.keymap.set('', '<End>', 'g$', { silent = true })
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
@@ -227,6 +242,7 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
+  'tpope/vim-fugitive', -- Git
 
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
@@ -257,7 +273,6 @@ require('lazy').setup({
       },
     },
   },
-
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
@@ -560,6 +575,8 @@ require('lazy').setup({
               completion = {
                 callSnippet = 'Replace',
               },
+              -- fz: add Lua subkey 'diagnostics' to hide undefined global 'vim' warnings
+              diagnostics = { globals = { 'vim' } },
               -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
               -- diagnostics = { disable = { 'missing-fields' } },
             },
@@ -740,11 +757,16 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      -- vim.cmd.colorscheme("tokyonight-night")
 
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
     end,
+  },
+  {
+    'catppuccin/nvim',
+    name = 'catppuccin',
+    priority = 1000,
   },
 
   -- Highlight todo, notes, etc in comments
@@ -858,6 +880,41 @@ require('lazy').setup({
     },
   },
 })
+
+require('catppuccin').setup {
+  integrations = {
+    mini = {
+      enabled = true,
+      indentscope_color = '',
+    },
+  },
+  color_overrides = {
+    all = {
+      text = '#e2e5fe',
+      lavender = '#ced4fd',
+      mantle = '#353538', -- statusline main background
+      base = '#232326', -- main window background
+      -- subtext1 = "#DEBAD4",
+      -- subtext0 = "#C8A6BE",
+      -- overlay2 = "#B293A8",
+      -- overlay1 = "#9C7F92",
+      -- overlay0 = "#866C7D",   -- comment colour
+      -- surface2 = "#705867",
+      -- surface1 = "#5A4551",   -- line numbers, whitespace, Visual bg and statusline LSP/fileinfo
+      surface0 = '#34343C', -- "#44313B",      -- cursorline / cursorcol
+      --
+      -- base = "#352939",
+      -- mantle = "#211924",
+      -- crust = "#1a1016",
+    },
+  },
+}
+
+vim.cmd.colorscheme 'catppuccin-frappe'
+vim.cmd.highlight 'Visual guibg=#3A3E4F'
+vim.opt.listchars = { tab = '» ', trail = '·', space = '·', nbsp = '␣' }
+vim.opt.list = false
+vim.opt.relativenumber = true
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
