@@ -144,6 +144,7 @@ vim.opt.splitbelow = true
 --  and `:help 'listchars'`
 vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+vim.o.tabstop = 4
 
 -- Preview substitutions live, as you type!
 vim.opt.inccommand = 'split'
@@ -315,7 +316,8 @@ require('lazy').setup({
   { -- Fuzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
-    branch = '0.1.x',
+    -- branch = '0.1.x', -- https://github.com/nvim-telescope/telescope.nvim/issues/3017
+    branch = 'master',
     dependencies = {
       'nvim-lua/plenary.nvim',
       { -- If encountering errors, see telescope-fzf-native README for installation instructions
@@ -554,7 +556,13 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- clangd = {},
-        -- gopls = {},
+        gopls = {
+          settings = {
+            gopls = {
+              completeUnimported = true,
+            },
+          },
+        },
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -802,7 +810,7 @@ require('lazy').setup({
       -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
       statusline.section_location = function()
-        return '%2l:%-2v'
+        return '%2p%% %2l:%-2v'
       end
 
       -- ... and there is more!
@@ -824,6 +832,16 @@ require('lazy').setup({
         additional_vim_regex_highlighting = { 'ruby' },
       },
       indent = { enable = true, disable = { 'ruby' } },
+      -- fz: enable incremental selection
+      incremental_selection = {
+        enable = true,
+        keymaps = {
+          init_selection = '<A-.>',
+          node_incremental = '<A-.>',
+          scope_incremental = 'm.',
+          node_decremental = '<A-,>',
+        },
+      },
     },
     config = function(_, opts)
       -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
@@ -837,6 +855,15 @@ require('lazy').setup({
       --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
       --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+    end,
+  },
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    config = function(_, _)
+      require('treesitter-context').setup {
+        multiline_threshold = 4,
+        mode = 'cursor',
+      }
     end,
   },
 
@@ -878,6 +905,11 @@ require('lazy').setup({
       task = '📌',
       lazy = '💤 ',
     },
+  },
+  dev = {
+    fallback = true,
+    path = '~/nvim-plugins',
+    patterns = { 'nvim-treesitter' },
   },
 })
 
