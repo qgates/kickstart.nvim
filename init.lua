@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -201,10 +201,10 @@ vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' }
 --  Use CTRL+<hjkl> to switch between windows
 --
 --  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+-- vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+-- vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+-- vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+-- vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -466,6 +466,13 @@ require('lazy').setup({
       --
       -- If you're wondering about lsp vs treesitter, you can check out the wonderfully
       -- and elegantly composed help section, `:help lsp-vs-treesitter`
+
+      require('lspconfig').nushell.setup {
+        cmd = { 'nu', '--lsp' },
+        filetypes = { 'nu' },
+        root_dir = require('lspconfig.util').find_git_ancestor,
+        single_file_support = true,
+      }
 
       --  This function gets run when an LSP attaches to a particular buffer.
       --    That is to say, every time a new file is opened that is associated with
@@ -837,8 +844,17 @@ require('lazy').setup({
       -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
       statusline.section_location = function()
-        return '%2p%% %2l:%-2v'
+        return "%2p%% %2l:%-2v %{strftime('%H:%M')}"
       end
+      -- https://github.com/nvim-lualine/lualine.nvim/discussions/493
+      local timer = vim.loop.new_timer()
+      timer:start(
+        0,
+        10000,
+        vim.schedule_wrap(function()
+          vim.api.nvim_command 'redrawstatus'
+        end)
+      )
 
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
@@ -858,7 +874,7 @@ require('lazy').setup({
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = { 'ruby' },
       },
-      indent = { enable = true, disable = { 'ruby' } },
+      indent = { enable = true, disable = { 'ruby', 'go', 'lua' } },
       -- fz: enable incremental selection
       incremental_selection = {
         enable = true,
@@ -885,6 +901,9 @@ require('lazy').setup({
       --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
     end,
+    dependencies = {
+      { 'nushell/tree-sitter-nu' },
+    },
   },
   {
     'nvim-treesitter/nvim-treesitter-context',
@@ -893,6 +912,47 @@ require('lazy').setup({
         multiline_threshold = 4,
         mode = 'cursor',
       }
+    end,
+  },
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    init = function()
+      local harpoon = require 'harpoon'
+      harpoon:setup {
+        settings = {},
+      }
+      vim.keymap.set('n', '<leader>hh', function()
+        harpoon.ui:toggle_quick_menu(harpoon:list())
+      end)
+      vim.keymap.set('n', '<leader>ha', function()
+        harpoon:list():add()
+      end)
+      vim.keymap.set('n', '<c-h>', function()
+        harpoon:list():select(1)
+      end)
+      vim.keymap.set('n', '<c-j>', function()
+        harpoon:list():select(2)
+      end)
+      vim.keymap.set('n', '<c-k>', function()
+        harpoon:list():select(3)
+      end)
+      vim.keymap.set('n', '<c-l>', function()
+        harpoon:list():select(4)
+      end)
+      vim.keymap.set('n', '<m-j>', function()
+        harpoon:list():prev { ui_nav_wrap = true }
+      end)
+      vim.keymap.set('n', '<m-k>', function()
+        harpoon:list():next { ui_nav_wrap = true }
+      end)
+      vim.keymap.set('n', '<m-h>', function()
+        vim.cmd 'bprev'
+      end)
+      vim.keymap.set('n', '<m-l>', function()
+        vim.cmd 'bnext'
+      end)
     end,
   },
 
@@ -910,7 +970,7 @@ require('lazy').setup({
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
@@ -974,8 +1034,15 @@ require('catppuccin').setup {
   },
 }
 
+local toggle_nicewindows = function()
+  vim.o.winbar = vim.o.winbar == '' and '%f%m' or ''
+  vim.o.laststatus = vim.o.laststatus == 2 and 3 or 2
+end
+vim.keymap.set('n', '<C-W>6', toggle_nicewindows, { desc = 'Nice Windows' })
+
 vim.cmd.colorscheme 'catppuccin-frappe'
 vim.cmd.highlight 'Visual guibg=#3A3E4F'
+vim.cmd.highlight 'WinSeparator guifg=#3A3E4F'
 vim.opt.listchars = { tab = '» ', trail = '·', space = '·', nbsp = '␣' }
 vim.opt.list = false
 vim.opt.relativenumber = true
