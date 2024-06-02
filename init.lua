@@ -144,7 +144,7 @@ vim.opt.splitbelow = true
 --  and `:help 'listchars'`
 vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
-vim.o.tabstop = 4
+vim.o.tabstop = 3
 
 -- Preview substitutions live, as you type!
 vim.opt.inccommand = 'split'
@@ -162,14 +162,16 @@ vim.opt.scrolloff = 5
 -- fz: modified mode from 'n' to '' - https://vimhelp.org/map.txt.html#map-overview
 vim.keymap.set('', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set('', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
+-- fz: map D to delete to black hole register _
+vim.keymap.set('n', 'D', '"_d', { silent = true })
 
 -- fz: further mods allow display line movement for Up/Down/Home/End in normal, visual and insert modes
 vim.keymap.set('', '<Up>', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set('', '<Down>', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
-vim.keymap.set('i', '<Up>', '<C-o>gk', { silent = true })
-vim.keymap.set('i', '<Down>', '<C-o>gj', { silent = true })
-vim.keymap.set('i', '<Home>', '<C-o>g^', { silent = true })
-vim.keymap.set('i', '<End>', '<C-o>g$', { silent = true })
+vim.keymap.set('i', '<Up>', '<cmd>set lz<cr><C-o>gk<cmd>set nolz<cr>', { silent = true })
+vim.keymap.set('i', '<Down>', '<cmd>set lz<cr><C-o>gj<cmd>set nolz<cr>', { silent = true })
+vim.keymap.set('i', '<Home>', '<cmd>set lz<cr><C-o>g^<cmd>set nolz<cr>', { silent = true })
+vim.keymap.set('i', '<End>', '<cmd>set lz<cr><C-o>g$<cmd>set nolz<cr>', { silent = true })
 vim.keymap.set('', '<Home>', 'g^', { silent = true })
 vim.keymap.set('', '<End>', 'g$', { silent = true })
 
@@ -180,6 +182,8 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
+vim.keymap.set('n', '[q', ':cprev<cr>', { silent = true, desc = 'Previous [Q]uickfix item' })
+vim.keymap.set('n', ']q', ':cnext<cr>', { silent = true, desc = 'Next [Q]uickfix item' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
@@ -957,6 +961,18 @@ require('lazy').setup({
       end)
       vim.keymap.set('n', '<c-l>', function()
         harpoon:list():select(4)
+      end)
+      vim.keymap.set('n', '<c-g>5', function()
+        harpoon:list():select(5)
+      end)
+      vim.keymap.set('n', '<c-g>6', function()
+        harpoon:list():select(6)
+      end)
+      vim.keymap.set('n', '<c-g>7', function()
+        harpoon:list():select(7)
+      end)
+      vim.keymap.set('n', '<c-g>8', function()
+        harpoon:list():select(8)
       end)
       vim.keymap.set('n', '<m-j>', function()
         harpoon:list():prev { ui_nav_wrap = true }
