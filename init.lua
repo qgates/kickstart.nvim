@@ -645,6 +645,7 @@ require('lazy').setup({
           settings = {
             gopls = {
               completeUnimported = true,
+              usePlaceholders = true,
             },
           },
         },
@@ -799,6 +800,7 @@ require('lazy').setup({
             luasnip.lsp_expand(args.body)
           end,
         },
+        -- experimental = { ghost_text = true },
         completion = { completeopt = 'menu,menuone,noinsert' },
 
         -- For an understanding of why these mappings were
