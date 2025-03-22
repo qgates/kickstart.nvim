@@ -160,12 +160,16 @@ vim.opt.scrolloff = 5
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
+-- temporary fix for split window syntax colour flashing
+-- https://github.com/neovim/neovim/issues/32660#issuecomment-2692738191
+vim.g._ts_force_sync_parsing = true
+
 -- fz: Remaps for dealing with word wrap navigation
 -- fz: modified mode from 'n' to '' - https://vimhelp.org/map.txt.html#map-overview
 vim.keymap.set('', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set('', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
--- fz: map D to delete to black hole register _
-vim.keymap.set('n', 'D', '"_d', { silent = true })
+-- fz: map - to delete to black hole register _
+vim.keymap.set('n', '-', '"_d', { silent = true }) -- +_ also available in normal
 
 -- fz: further mods allow display line movement for Up/Down/Home/End in normal, visual and insert modes
 vim.keymap.set('', '<Up>', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
