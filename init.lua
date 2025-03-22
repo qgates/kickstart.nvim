@@ -192,7 +192,8 @@ vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagn
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 vim.g.cmptoggle = true
-vim.keymap.set('n', '<leader>tc', '<cmd>lua vim.g.cmptoggle = not vim.g.cmptoggle<CR>', { desc = 'Toggle [C]mp suggestions' })
+vim.keymap.set('n', '<leader>ts', '<cmd>lua vim.g.cmptoggle = not vim.g.cmptoggle<CR>', { desc = 'Toggle Cmp [S]uggestions' })
+vim.keymap.set('n', '<leader>tc', '<cmd>TSContextToggle<CR>', { desc = 'Toggle TS [C]ontext' })
 
 vim.o.foldenable = false
 vim.api.nvim_create_autocmd({ 'BufNew' }, {
@@ -815,7 +816,7 @@ require('lazy').setup({
 
         -- see also
         -- https://github.com/stevearc/conform.nvim/blob/master/doc/recipes.md#autoformat-with-extra-features
-        local disable_filetypes = { c = true, cpp = true, typescript = true, javascript = true }
+        local disable_filetypes = { c = true, cpp = true, typescript = true, javascript = true, vue = true }
         local lsp_format_opt
         if disable_filetypes[vim.bo[bufnr].filetype] then
           lsp_format_opt = 'never'
@@ -1055,7 +1056,7 @@ require('lazy').setup({
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = { 'ruby' },
       },
-      indent = { enable = true, disable = { 'ruby', 'go', 'lua' } },
+      indent = { enable = true, disable = { 'ruby', 'go', 'lua', 'yaml' } },
       -- fz: enable incremental selection
       incremental_selection = {
         enable = true,
