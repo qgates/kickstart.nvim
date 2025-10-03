@@ -722,16 +722,56 @@ require('lazy').setup({
       --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
-      local servers = {
-        -- clangd = {},
-        gopls = {
-          settings = {
-            gopls = {
-              completeUnimported = true,
-              usePlaceholders = true,
+
+      local vue_language_server_path = vim.fn.expand '$MASON/packages' .. '/vue-language-server' .. '/node_modules/@vue/language-server'
+
+      -- https://www.reddit.com/r/neovim/comments/1m28n9p/getting_vuelanguageserver_vue_ls_30_working_with/
+      local vue_plugin = {
+        name = '@vue/typescript-plugin',
+        location = vue_language_server_path,
+        languages = { 'vue' },
+        configNamespace = 'typescript',
+      }
+      vim.lsp.config('vtsls', {
+        settings = {
+          vtsls = {
+            tsserver = {
+              globalPlugins = {
+                vue_plugin,
+              },
             },
           },
         },
+        filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+      })
+      -- vim.lsp.enable 'vue_ls'
+      -- vim.lsp.enable 'vtsls'
+
+      -- local lspconfig = require 'lspconfig'
+      --
+      -- lspconfig.ts_ls.setup {
+      --   init_options = {
+      --     plugins = {
+      --       {
+      --         name = '@vue/typescript-plugin',
+      --         location = vue_language_server_path,
+      --         languages = { 'vue' },
+      --       },
+      --     },
+      --   },
+      --   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+      -- }
+
+      local servers = {
+        -- clangd = {},
+        -- gopls = {
+        --   settings = {
+        --     gopls = {
+        --       completeUnimported = true,
+        --       usePlaceholders = true,
+        --     },
+        --   },
+        -- },
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -744,14 +784,17 @@ require('lazy').setup({
         --
 
         -- https://github.com/vuejs/language-tools
-        volar = {
-          filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
-          init_options = {
-            vue = {
-              hybridMode = false,
-            },
-          },
-        },
+        -- vue_ls = {
+        --   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+        --   init_options = {
+        --     vue = {
+        --       hybridMode = false,
+        --     },
+        --   },
+        -- },
+        -- vue_ls = {
+        --   settings = { css = { lint = { unknownAtRules = 'ignore' } } },
+        -- },
 
         lua_ls = {
           -- cmd = { ... },
@@ -803,6 +846,8 @@ require('lazy').setup({
             require('lspconfig')[server_name].setup(server)
           end,
         },
+        automatic_enable = { exclude = { 'vue_ls' } },
+        vim.lsp.enable { 'vue_ls' },
       }
     end,
   },
@@ -830,7 +875,7 @@ require('lazy').setup({
 
         -- see also
         -- https://github.com/stevearc/conform.nvim/blob/master/doc/recipes.md#autoformat-with-extra-features
-        local disable_filetypes = { c = true, cpp = true, typescript = true, javascript = true, vue = true }
+        local disable_filetypes = { c = true, cpp = true, typescript = true, javascript = true, vue = true, markdown = true }
         local lsp_format_opt
         if disable_filetypes[vim.bo[bufnr].filetype] then
           lsp_format_opt = 'never'
@@ -925,7 +970,7 @@ require('lazy').setup({
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
+          ['<Tab>'] = cmp.mapping.confirm { select = true },
 
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
@@ -1031,15 +1076,45 @@ require('lazy').setup({
       --  and try some other statusline plugin
       local statusline = require 'mini.statusline'
       -- set use_icons to true if you have a Nerd Font
-      statusline.setup { use_icons = vim.g.have_nerd_font }
+      statusline.setup {
+        use_icons = vim.g.have_nerd_font,
+        content = {
+          active = function()
+            local mode, mode_hl = statusline.section_mode { trunc_width = 120 }
+            local git = statusline.section_git { trunc_width = 40 }
+            local diff = statusline.section_diff { trunc_width = 75 }
+            local diagnostics = statusline.section_diagnostics { trunc_width = 75 }
+            local lsp = statusline.section_lsp { trunc_width = 75 }
+            local filename = statusline.section_filename { trunc_width = 140 }
+            local fileinfo = statusline.section_fileinfo { trunc_width = 120 }
+            local location = '%2p%% %2l:%-2v'
+            local search = statusline.section_searchcount { trunc_width = 75 }
+            local time = ''
+            if vim.fn.winwidth(0) > 100 then
+              time = '\u{f0954} ' .. os.date '%H:%M'
+            end
+            return statusline.combine_groups {
+              { hl = mode_hl, strings = { mode } },
+              { hl = 'MiniStatuslineDevinfo', strings = { git, diff, diagnostics, lsp } },
+              '%<', -- Mark general truncate point
+              { hl = 'MiniStatuslineFilename', strings = { filename } },
+              '%=', -- End left alignment
+              { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
+              { hl = mode_hl, strings = { search, location } },
+              { hl = 'MiniStatuslineFileinfo', strings = { time } },
+            }
+          end,
+        },
+      }
 
       -- You can configure sections in the statusline by overriding their
       -- default behavior. For example, here we set the section for
       -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
-      statusline.section_location = function()
-        return "%2p%% %2l:%-2v %{strftime('%H:%M')}"
-      end
+      -- statusline.section_location = function()
+      --   return '%2p%% %2l:%-2v'
+      -- end
+
       -- https://github.com/nvim-lualine/lualine.nvim/discussions/493
       local timer = vim.loop.new_timer()
       timer:start(
@@ -1049,6 +1124,21 @@ require('lazy').setup({
           vim.api.nvim_command 'redrawstatus'
         end)
       )
+
+      -- redraw statusline when a buffer is read or focus is gained
+      local timer2 = vim.loop.new_timer()
+      vim.api.nvim_create_autocmd({ 'BufReadPost', 'BufEnter', 'FocusGained' }, {
+        callback = function()
+          timer2:start(
+            50,
+            0,
+            vim.schedule_wrap(function()
+              -- vim.cmd 'redrawstatus'
+              vim.api.nvim_command 'redrawstatus'
+            end)
+          )
+        end,
+      })
 
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
@@ -1070,7 +1160,7 @@ require('lazy').setup({
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = { 'ruby' },
       },
-      indent = { enable = true, disable = { 'ruby', 'go', 'lua', 'yaml' } },
+      indent = { enable = true, disable = { 'ruby', 'go', 'lua', 'yaml', 'markdown' } },
       -- fz: enable incremental selection
       incremental_selection = {
         enable = true,
@@ -1100,6 +1190,7 @@ require('lazy').setup({
       require('treesitter-context').setup {
         multiline_threshold = 4,
         mode = 'cursor',
+        multiwindow = true,
       }
     end,
   },
@@ -1258,6 +1349,14 @@ vim.cmd.highlight 'WinSeparator guifg=#3A3E4F'
 vim.opt.listchars = { tab = '» ', trail = '·', space = '·', nbsp = '␣' }
 vim.opt.list = false
 vim.opt.relativenumber = true
+
+vim.api.nvim_create_user_command('FzFold', function()
+  vim.cmd 'highlight Folded guibg=#34344C guifg=none'
+  vim.cmd 'set foldexpr=nvim_treesitter#foldexpr()'
+  vim.cmd 'set fillchars=fold:\\ '
+  vim.cmd 'set foldmethod=expr'
+  vim.cmd 'set foldtext=""'
+end, {})
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
