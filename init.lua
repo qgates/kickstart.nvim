@@ -135,6 +135,7 @@ vim.opt.signcolumn = 'yes'
 vim.opt.updatetime = 250
 
 -- Decrease mapped sequence wait time
+-- Displays which-key popup sooner
 vim.opt.timeoutlen = 300
 
 -- Configure how new splits should be opened
@@ -160,14 +161,11 @@ vim.opt.scrolloff = 5
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
--- temporary fix for split window syntax colour flashing
--- https://github.com/neovim/neovim/issues/32660#issuecomment-2692738191
-vim.g._ts_force_sync_parsing = true
-
 -- fz: Remaps for dealing with word wrap navigation
 -- fz: modified mode from 'n' to '' - https://vimhelp.org/map.txt.html#map-overview
 vim.keymap.set('', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set('', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
+
 -- fz: map - to delete to black hole register _
 vim.keymap.set('n', '-', '"_d', { silent = true }) -- +_ also available in normal
 
@@ -186,38 +184,21 @@ vim.keymap.set('', '<End>', 'g$', { silent = true })
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
-vim.keymap.set('n', '[q', ':cprev<cr>', { silent = true, desc = 'Previous [Q]uickfix item' })
-vim.keymap.set('n', ']q', ':cnext<cr>', { silent = true, desc = 'Next [Q]uickfix item' })
-vim.keymap.set('n', '[l', ':lprev<cr>', { silent = true, desc = 'Previous [L]ocation item' })
-vim.keymap.set('n', ']l', ':lnext<cr>', { silent = true, desc = 'Next [L]ocation item' })
+
+-- default nvim 11.x
+-- vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
+-- vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
+-- vim.keymap.set('n', '[q', ':cprev<cr>', { silent = true, desc = 'Previous [Q]uickfix item' })
+-- vim.keymap.set('n', ']q', ':cnext<cr>', { silent = true, desc = 'Next [Q]uickfix item' })
+
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
-
-vim.g.cmptoggle = true
-vim.keymap.set('n', '<leader>ts', '<cmd>lua vim.g.cmptoggle = not vim.g.cmptoggle<CR>', { desc = 'Toggle Cmp [S]uggestions' })
-vim.keymap.set('n', '<leader>tc', '<cmd>TSContextToggle<CR>', { desc = 'Toggle TS [C]ontext' })
-
-vim.o.foldenable = false
-vim.api.nvim_create_autocmd({ 'BufNew' }, {
-  callback = function()
-    vim.wo.foldmethod = 'expr'
-    vim.wo.foldexpr = 'nvim_treesitter#foldexpr()'
-    vim.wo.foldtext = ''
-    vim.cmd [[ hi Folded guibg=none ]]
-  end,
-})
--- vim.api.nvim_create_autocmd({ 'VimEnter', 'BufEnter' }, {
---   callback = function()
---     vim.cmd [[
---       set foldexpr=nvim_treesitter#foldexpr()
---       set foldmethod=expr
---       set foldtext=""
---       hi Folded guibg=none
---     ]]
---   end,
--- })
+vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Diagnostic [L]ocation list (current file)' })
+vim.keymap.set('n', '<leader>Q', vim.diagnostic.setqflist, { desc = 'Diagnostic [Q]uickfix (all open files)' })
+vim.keymap.set('n', '<leader>tc', '<cmd>CmpToggle<cr>', { desc = '[T]oggle cmp suggestions (current file)' })
+vim.keymap.set('n', '<leader>oq', ':copen<cr>', { silent = true, desc = '[O]pen [Q]uickfix list' })
+vim.keymap.set('n', '<leader>ol', ':lopen<cr>', { silent = true, desc = '[O]pen [L]ocation list' })
+vim.keymap.set('n', '<leader>ocq', ':cclose<cr>', { silent = true, desc = '[C]lose [Q]uickfix list' })
+vim.keymap.set('n', '<leader>ocl', ':lclose<cr>', { silent = true, desc = '[C]lose [L]ocation list' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -288,22 +269,12 @@ require('lazy').setup({
   -- with the first argument being the link and the following
   -- keys can be used to configure plugin behavior/loading/etc.
   --
-  -- Use `opts = {}` to automatically pass options to a plugin's `setup()` function, forcing the plugin to be loaded.
+  -- Use `opts = {}` to force a plugin to be loaded.
   --
 
-  -- Alternatively, use `config = function() ... end` for full control over the configuration.
-  -- If you prefer to call `setup` explicitly, use:
-  --    {
-  --        'lewis6991/gitsigns.nvim',
-  --        config = function()
-  --            require('gitsigns').setup({
-  --                -- Your gitsigns configuration here
-  --            })
-  --        end,
-  --    }
-  --
   -- Here is a more advanced example where we pass configuration
-  -- options to `gitsigns.nvim`.
+  -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
+  --    require('gitsigns').setup({ ... })
   --
   -- See `:help gitsigns` to understand what the configuration keys do
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
@@ -329,21 +300,19 @@ require('lazy').setup({
   -- which loads which-key before all the UI elements are loaded. Events can be
   -- normal autocommands events (`:help autocmd-events`).
   --
-  -- Then, because we use the `opts` key (recommended), the configuration runs
-  -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
+  -- Then, because we use the `config` key, the configuration only runs
+  -- after the plugin has been loaded:
+  --  config = function() ... end
 
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     opts = {
-      -- delay between pressing a key and opening which-key (milliseconds)
-      -- this setting is independent of vim.opt.timeoutlen
-      -- delay = 300,
       icons = {
         -- set icon mappings to true if you have a Nerd Font
         mappings = vim.g.have_nerd_font,
         -- If you are using a Nerd Font: set icons.keys to an empty table which will use the
-        -- default which-key.nvim defined Nerd Font icons, otherwise define a string table
+        -- default whick-key.nvim defined Nerd Font icons, otherwise define a string table
         keys = vim.g.have_nerd_font and {} or {
           Up = '<Up> ',
           Down = '<Down> ',
@@ -384,6 +353,7 @@ require('lazy').setup({
         { '<leader>s', group = '[S]earch' },
         { '<leader>w', group = '[W]orkspace' },
         { '<leader>t', group = '[T]oggle' },
+        { '<leader>o', group = '[O]pen (lists)' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
       },
     },
@@ -511,22 +481,22 @@ require('lazy').setup({
     opts = {
       library = {
         -- Load luvit types when the `vim.uv` word is found
-        { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
+        { path = 'luvit-meta/library', words = { 'vim%.uv' } },
       },
     },
   },
+  { 'Bilal2453/luvit-meta', lazy = true },
   {
     -- Main LSP Configuration
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
-      -- Mason must be loaded before its dependents so we need to set it up here.
-      -- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
-      { 'williamboman/mason.nvim', opts = {} },
-      'williamboman/mason-lspconfig.nvim',
+      { 'mason-org/mason.nvim', config = true }, -- NOTE: Must be loaded before dependants
+      'mason-org/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
+      -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
       { 'j-hui/fidget.nvim', opts = {} },
 
       -- Allows extra capabilities provided by nvim-cmp
@@ -558,12 +528,79 @@ require('lazy').setup({
       -- If you're wondering about lsp vs treesitter, you can check out the wonderfully
       -- and elegantly composed help section, `:help lsp-vs-treesitter`
 
-      require('lspconfig').nushell.setup {
+      -- Example of how to override 'denols' Mason config. Remove from Mason and use this instead...
+      -- single_file_support config suggested to avoid multiple lsp's when using goto type declaration
+      -- on deno virtual documents
+
+      -- require('lspconfig').denols.setup {
+      --   root_dir = require('lspconfig.util').root_pattern('deno.json', 'deno.jsonc'),
+      --   single_file_support = false,
+      --   init_options = {
+      --     enable = true,
+      --     lint = true,
+      --     unstable = true,
+      --     suggest = {
+      --       imports = {
+      --         hosts = {
+      --           ['https://deno.land'] = true,
+      --           ['https://cdn.nest.land'] = true,
+      --           ['https://crux.land'] = true,
+      --         },
+      --       },
+      --     },
+      --   },
+      -- }
+      --
+
+      -- config overrides for gopls
+      vim.lsp.config['gopls'] = {
+        completeUnimported = true,
+        usePlaceholders = true,
+      }
+
+      -- config overrides for vtsls / vue-language-server
+      local vue_language_server_path = vim.fn.expand '$MASON/packages' .. '/vue-language-server' .. '/node_modules/@vue/language-server'
+
+      -- https://www.reddit.com/r/neovim/comments/1m28n9p/getting_vuelanguageserver_vue_ls_30_working_with/
+      local vue_plugin = {
+        name = '@vue/typescript-plugin',
+        location = vue_language_server_path,
+        languages = { 'vue' },
+        configNamespace = 'typescript',
+      }
+      vim.lsp.config('vtsls', {
+        settings = {
+          vtsls = {
+            tsserver = {
+              globalPlugins = {
+                vue_plugin,
+              },
+            },
+          },
+        },
+        filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+      })
+
+      -- nushell not in Mason, install and configure if found locally
+      vim.lsp.config['nushell'] = {
+        -- require('lspconfig').nushell.setup {
         cmd = { 'nu', '--lsp' },
         filetypes = { 'nu' },
-        root_dir = require('lspconfig.util').find_git_ancestor,
+        root_dir = vim.fs.dirname(vim.fs.find('.git', { upward = true })[1]),
+        -- root_dir = require('lspconfig.util').find_git_ancestor,
         single_file_support = true,
       }
+      if vim.fn.executable 'nu' == 1 then
+        vim.lsp.enable 'nushell'
+      end
+
+      -- // helper to check existence of binary before enabling lsp
+      -- local function setup_if_exists(server, binary, config)
+      --   if vim.fn.executable(binary or server) == 1 then
+      --     lspconfig[server].setup(config or {})
+      --   end
+      -- end
+      -- setup_if_exists("pyright")
 
       --  This function gets run when an LSP attaches to a particular buffer.
       --    That is to say, every time a new file is opened that is associated with
@@ -585,19 +622,23 @@ require('lazy').setup({
           -- Jump to the definition of the word under your cursor.
           --  This is where a variable was first declared, or where a function is defined, etc.
           --  To jump back, press <C-t>.
-          map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          -- map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          -- vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = true })
+          map('gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
 
           -- Find references for the word under your cursor.
-          map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
+          -- map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
+          map('gr', vim.lsp.buf.references, '[G]oto [R]eferences')
 
           -- Jump to the implementation of the word under your cursor.
           --  Useful when your language has ways of declaring types without an actual implementation.
-          map('gI', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
+          -- map('gI', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
+          map('gI', vim.lsp.buf.implementation, '[G]oto [I]mplementation')
 
           -- Jump to the type of the word under your cursor.
           --  Useful when you're not sure what type a variable is and you want to see
           --  the definition of its *type*, not where it was *defined*.
-          map('<leader>D', require('telescope.builtin').lsp_type_definitions, 'Type [D]efinition')
+          map('<leader>D', vim.lsp.buf.type_definition, 'Type [D]efinition')
 
           -- Fuzzy find all the symbols in your current document.
           --  Symbols are things like variables, functions, types, etc.
@@ -623,26 +664,14 @@ require('lazy').setup({
           --  For example, in C this would take you to the header.
           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
-          -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
-          ---@param client vim.lsp.Client
-          ---@param method vim.lsp.protocol.Method
-          ---@param bufnr? integer some lsp support methods only in specific files
-          ---@return boolean
-          local function client_supports_method(client, method, bufnr)
-            if vim.fn.has 'nvim-0.11' == 1 then
-              return client:supports_method(method, bufnr)
-            else
-              return client.supports_method(method, { bufnr = bufnr })
-            end
-          end
-
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
           --    See `:help CursorHold` for information about when this is executed
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
           local client = vim.lsp.get_client_by_id(event.data.client_id)
-          if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
+          if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
+            -- if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then -- nvim 10.x
             local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
@@ -669,7 +698,8 @@ require('lazy').setup({
           -- code, if the language server you are using supports them
           --
           -- This may be unwanted, since they displace some of your code
-          if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
+          if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
+            -- if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then -- nvim 10.x
             map('<leader>th', function()
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
             end, '[T]oggle Inlay [H]ints')
@@ -722,46 +752,8 @@ require('lazy').setup({
       --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
-
-      local vue_language_server_path = vim.fn.expand '$MASON/packages' .. '/vue-language-server' .. '/node_modules/@vue/language-server'
-
-      -- https://www.reddit.com/r/neovim/comments/1m28n9p/getting_vuelanguageserver_vue_ls_30_working_with/
-      local vue_plugin = {
-        name = '@vue/typescript-plugin',
-        location = vue_language_server_path,
-        languages = { 'vue' },
-        configNamespace = 'typescript',
-      }
-      vim.lsp.config('vtsls', {
-        settings = {
-          vtsls = {
-            tsserver = {
-              globalPlugins = {
-                vue_plugin,
-              },
-            },
-          },
-        },
-        filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
-      })
-      -- vim.lsp.enable 'vue_ls'
-      -- vim.lsp.enable 'vtsls'
-
-      -- local lspconfig = require 'lspconfig'
-      --
-      -- lspconfig.ts_ls.setup {
-      --   init_options = {
-      --     plugins = {
-      --       {
-      --         name = '@vue/typescript-plugin',
-      --         location = vue_language_server_path,
-      --         languages = { 'vue' },
-      --       },
-      --     },
-      --   },
-      --   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
-      -- }
-
+      -- INFO: fz: this table forces lsp's to be loaded. Only use for lsp's not autoloaded by Mason.
+      -- When they are, configure them in nvim-lspconfig.config() using vim.lsp.config[...] = {...}
       local servers = {
         -- clangd = {},
         -- gopls = {
@@ -783,22 +775,9 @@ require('lazy').setup({
         -- ts_ls = {},
         --
 
-        -- https://github.com/vuejs/language-tools
-        -- vue_ls = {
-        --   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
-        --   init_options = {
-        --     vue = {
-        --       hybridMode = false,
-        --     },
-        --   },
-        -- },
-        -- vue_ls = {
-        --   settings = { css = { lint = { unknownAtRules = 'ignore' } } },
-        -- },
-
         lua_ls = {
-          -- cmd = { ... },
-          -- filetypes = { ... },
+          -- cmd = {...},
+          -- filetypes = { ...},
           -- capabilities = {},
           settings = {
             Lua = {
@@ -815,16 +794,13 @@ require('lazy').setup({
       }
 
       -- Ensure the servers and tools above are installed
-      --
-      -- To check the current status of installed tools and/or manually install
-      -- other tools, you can run
+      --  To check the current status of installed tools and/or manually install
+      --  other tools, you can run
       --    :Mason
       --
-      -- You can press `g?` for help in this menu.
-      --
-      -- `mason` had to be setup earlier: to configure its options see the
-      -- `dependencies` table for `nvim-lspconfig` above.
-      --
+      --  You can press `g?` for help in this menu.
+      require('mason').setup()
+
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
@@ -834,8 +810,6 @@ require('lazy').setup({
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
-        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_installation = false,
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
@@ -846,8 +820,6 @@ require('lazy').setup({
             require('lspconfig')[server_name].setup(server)
           end,
         },
-        automatic_enable = { exclude = { 'vue_ls' } },
-        vim.lsp.enable { 'vue_ls' },
       }
     end,
   },
@@ -872,9 +844,6 @@ require('lazy').setup({
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-
-        -- see also
-        -- https://github.com/stevearc/conform.nvim/blob/master/doc/recipes.md#autoformat-with-extra-features
         local disable_filetypes = { c = true, cpp = true, typescript = true, javascript = true, vue = true, markdown = true }
         local lsp_format_opt
         if disable_filetypes[vim.bo[bufnr].filetype] then
@@ -933,7 +902,6 @@ require('lazy').setup({
       --  into multiple repos for maintenance purposes.
       'hrsh7th/cmp-nvim-lsp',
       -- 'hrsh7th/cmp-path',
-      'hrsh7th/cmp-nvim-lsp-signature-help',
     },
     config = function()
       -- See `:help cmp`
@@ -941,17 +909,20 @@ require('lazy').setup({
       local luasnip = require 'luasnip'
       luasnip.config.setup {}
 
+      -- load snippets if present
+      luasnip.add_snippets('go', require 'snippets_go')
+      luasnip.add_snippets('typescript', require 'snippets_js')
+
       cmp.setup {
-        enabled = function()
-          return vim.g.cmptoggle
-        end,
         snippet = {
           expand = function(args)
             luasnip.lsp_expand(args.body)
           end,
         },
         -- experimental = { ghost_text = true },
-        completion = { completeopt = 'menu,menuone,noinsert' },
+        preselect = cmp.PreselectMode.None, -- don't preselect menu items
+        -- completion = { completeopt = 'menu,menuone,noselect' },
+        -- completion = { completeopt = 'menu,menuone,noinsert' },
 
         -- For an understanding of why these mappings were
         -- chosen, you will need to read `:help ins-completion`
@@ -970,6 +941,7 @@ require('lazy').setup({
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
+          -- ['<C-y>'] = cmp.mapping.confirm { select = true },
           ['<Tab>'] = cmp.mapping.confirm { select = true },
 
           -- If you prefer more traditional completion keymaps,
@@ -1014,7 +986,6 @@ require('lazy').setup({
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
-          { name = 'nvim_lsp_signature_help' },
         },
       }
     end,
@@ -1027,14 +998,7 @@ require('lazy').setup({
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
     'folke/tokyonight.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
-    config = function()
-      ---@diagnostic disable-next-line: missing-fields
-      require('tokyonight').setup {
-        styles = {
-          comments = { italic = false }, -- Disable italics in comments
-        },
-      }
-
+    init = function()
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
@@ -1087,6 +1051,7 @@ require('lazy').setup({
             local lsp = statusline.section_lsp { trunc_width = 75 }
             local filename = statusline.section_filename { trunc_width = 140 }
             local fileinfo = statusline.section_fileinfo { trunc_width = 120 }
+            -- local location = statusline.section_location { trunc_width = 75 }
             local location = '%2p%% %2l:%-2v'
             local search = statusline.section_searchcount { trunc_width = 75 }
             local time = ''
@@ -1159,6 +1124,7 @@ require('lazy').setup({
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = { 'ruby' },
+        -- disable = { 'dockerfile' },
       },
       indent = { enable = true, disable = { 'ruby', 'go', 'lua', 'yaml', 'markdown' } },
       -- fz: enable incremental selection
@@ -1180,9 +1146,9 @@ require('lazy').setup({
       ---@diagnostic disable-next-line: missing-fields
       require('nvim-treesitter.configs').setup(opts)
     end,
-    dependencies = {
-      { 'nushell/tree-sitter-nu' },
-    },
+    -- dependencies = {
+    --   { 'nushell/tree-sitter-nu' },
+    -- },
   },
   {
     'nvim-treesitter/nvim-treesitter-context',
@@ -1255,7 +1221,7 @@ require('lazy').setup({
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
-  -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
+  -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
 
@@ -1275,12 +1241,8 @@ require('lazy').setup({
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
+  --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
   -- { import = 'custom.plugins' },
-  --
-  -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
-  -- Or use telescope!
-  -- In normal mode type `<space>sh` then write `lazy.nvim-plugin`
-  -- you can continue same window with `<space>sr` which resumes last telescope search
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
@@ -1346,16 +1308,66 @@ vim.keymap.set('n', '<C-W>6', toggle_nicewindows, { desc = 'Nice Windows' })
 vim.cmd.colorscheme 'catppuccin-frappe'
 vim.cmd.highlight 'Visual guibg=#3A3E4F'
 vim.cmd.highlight 'WinSeparator guifg=#3A3E4F'
+vim.cmd.highlight 'PmenuSel guibg=#64647C guifg=none'
+vim.cmd.highlight 'Error cterm=undercurl ctermfg=red ctermbg=NONE guifg="#FF5555" guibg=NONE'
+vim.cmd.highlight 'Folded guibg=#34344C guifg=none'
 vim.opt.listchars = { tab = '» ', trail = '·', space = '·', nbsp = '␣' }
 vim.opt.list = false
 vim.opt.relativenumber = true
 
 vim.api.nvim_create_user_command('FzFold', function()
-  vim.cmd 'highlight Folded guibg=#34344C guifg=none'
   vim.cmd 'set foldexpr=nvim_treesitter#foldexpr()'
   vim.cmd 'set fillchars=fold:\\ '
   vim.cmd 'set foldmethod=expr'
   vim.cmd 'set foldtext=""'
+  vim.cmd 'set foldlevel=1'
+end, {})
+
+-- https://github.com/onion108/onion27-nvim-config/blob/main/lua/terminal/tweaks/deno-lsp-correction.lua
+local function virtual_text_document(params)
+  --vim.notify("attempt to read: " .. vim.inspect(params.match))
+  local bufnr = params.buf
+  local actual_path = params.match:sub(1)
+
+  local clients = vim.lsp.get_clients { name = 'denols' }
+  if #clients == 0 then
+    vim.notify('cannot find denols', vim.log.levels.WARN)
+    return
+  end
+
+  local client = clients[1]
+  local method = 'deno/virtualTextDocument'
+  local req_params = { textDocument = { uri = actual_path } }
+  local response = client:request_sync(method, req_params, 2000, 0)
+  if not response or type(response.result) ~= 'string' then
+    vim.notify("failed to get virtual document's content", vim.log.levels.WARN)
+    return
+  end
+
+  local lines = vim.split(response.result, '\n')
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.api.nvim_set_option_value('readonly', true, { buf = bufnr })
+  vim.api.nvim_set_option_value('modified', false, { buf = bufnr })
+  vim.api.nvim_set_option_value('modifiable', false, { buf = bufnr })
+  vim.api.nvim_buf_set_name(bufnr, actual_path)
+  vim.lsp.buf_attach_client(bufnr, client.id)
+
+  local filetype = 'typescript'
+  if actual_path:sub(-3) == '.md' then
+    filetype = 'markdown'
+  end
+  vim.api.nvim_set_option_value('filetype', filetype, { buf = bufnr })
+end
+
+vim.api.nvim_create_autocmd({ 'BufReadCmd' }, {
+  pattern = { 'deno:/*', 'asset://*' },
+  callback = virtual_text_document,
+})
+
+local cmp_enabled = true
+vim.api.nvim_create_user_command('CmpToggle', function()
+  cmp_enabled = not cmp_enabled
+  require('cmp').setup.buffer { enabled = cmp_enabled }
 end, {})
 
 -- The line beneath this is called `modeline`. See `:help modeline`
