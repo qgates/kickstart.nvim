@@ -21,16 +21,20 @@ return {
             vim.cmd.normal { ']c', bang = true }
           else
             gitsigns.nav_hunk 'next'
+            vim.cmd 'sleep 10m'
+            vim.cmd 'normal! zz'
           end
-        end, { desc = 'Jump to next git [c]hange' })
+        end, { desc = 'Jump to next git [c]hange + center' })
 
         map('n', '[c', function()
           if vim.wo.diff then
             vim.cmd.normal { '[c', bang = true }
           else
             gitsigns.nav_hunk 'prev'
+            vim.cmd 'sleep 10m'
+            vim.cmd 'normal! zz'
           end
-        end, { desc = 'Jump to previous git [c]hange' })
+        end, { desc = 'Jump to previous git [c]hange + center' })
 
         -- Actions
         -- visual mode
