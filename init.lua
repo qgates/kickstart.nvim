@@ -167,7 +167,7 @@ vim.keymap.set('', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = tru
 vim.keymap.set('', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 
 -- fz: map - to delete to black hole register _
-vim.keymap.set('n', '-', '"_d', { silent = true }) -- +_ also available in normal
+vim.keymap.set({ 'n', 'v' }, '\\', '"_d', { silent = true }) -- +_ also available in normal
 
 -- fz: further mods allow display line movement for Up/Down/Home/End in normal, visual and insert modes
 vim.keymap.set('', '<Up>', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
@@ -1034,6 +1034,10 @@ require('lazy').setup({
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
+
+      -- Sort, evaluate and region exchange etc
+      -- https://github.com/nvim-mini/mini.operators
+      -- require('mini.operators').setup()
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
