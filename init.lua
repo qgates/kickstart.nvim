@@ -1056,7 +1056,7 @@ require('lazy').setup({
             local filename = statusline.section_filename { trunc_width = 140 }
             local fileinfo = statusline.section_fileinfo { trunc_width = 120 }
             -- local location = statusline.section_location { trunc_width = 75 }
-            local location = '%2p%% %2l:%-2v'
+            local location = '%2p%% %2l:%-2c'
             local search = statusline.section_searchcount { trunc_width = 75 }
             local time = ''
             if vim.fn.winwidth(0) > 100 then
