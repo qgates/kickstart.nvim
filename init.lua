@@ -178,6 +178,10 @@ vim.keymap.set('i', '<Home>', '<cmd>set lz<cr><C-o>g^<cmd>set nolz<cr>', { silen
 vim.keymap.set('i', '<End>', '<cmd>set lz<cr><C-o>g$<cmd>set nolz<cr>', { silent = true })
 vim.keymap.set('', '<Home>', 'g^', { silent = true })
 vim.keymap.set('', '<End>', 'g$', { silent = true })
+vim.keymap.set('n', '<C-Down>', '<C-e>', { silent = true })
+vim.keymap.set('n', '<C-Up>', '<C-y>', { silent = true })
+vim.keymap.set('i', '<C-Down>', '<C-o><C-e>', { silent = true })
+vim.keymap.set('i', '<C-Up>', '<C-o><C-y>', { silent = true })
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
