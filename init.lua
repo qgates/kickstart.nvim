@@ -451,6 +451,10 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
+      vim.keymap.set('n', '[x', function()
+        require('treesitter-context').go_to_context(vim.v.count1)
+      end, { silent = true, desc = 'Jump to conte[x]t' })
+
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
@@ -560,6 +564,11 @@ require('lazy').setup({
       vim.lsp.config['gopls'] = {
         completeUnimported = true,
         usePlaceholders = true,
+      }
+
+      -- NOTE: moved from servers table as that no longer worked (due to autoloading via Mason?)
+      vim.lsp.config['lua_ls'] = {
+        settings = { Lua = { diagnostics = { globals = { 'vim' } } } },
       }
 
       -- config overrides for vtsls / vue-language-server
@@ -789,6 +798,7 @@ require('lazy').setup({
                 callSnippet = 'Replace',
               },
               -- fz: add Lua subkey 'diagnostics' to hide undefined global 'vim' warnings
+              -- NOTE: moved to vim.lsp.config[...] as this no longer worked (due to autoloading via Mason?)
               diagnostics = { globals = { 'vim' } },
               -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
               -- diagnostics = { disable = { 'missing-fields' } },
