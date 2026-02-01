@@ -568,7 +568,12 @@ require('lazy').setup({
 
       -- NOTE: moved from servers table as that no longer worked (due to autoloading via Mason?)
       vim.lsp.config['lua_ls'] = {
-        settings = { Lua = { diagnostics = { globals = { 'vim' } } } },
+        settings = {
+          Lua = {
+            diagnostics = { globals = { 'vim' } },
+            completion = { callSnippet = 'Replace' },
+          },
+        },
       }
 
       -- config overrides for vtsls / vue-language-server
@@ -765,7 +770,7 @@ require('lazy').setup({
       --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
-      -- INFO: fz: this table forces lsp's to be loaded. Only use for lsp's not autoloaded by Mason.
+      -- INFO: fz: this table forces lsp's to be loaded. Only use for lsp's not autoloaded via Mason.
       -- When they are, configure them in nvim-lspconfig.config() using vim.lsp.config[...] = {...}
       local servers = {
         -- clangd = {},
@@ -788,23 +793,22 @@ require('lazy').setup({
         -- ts_ls = {},
         --
 
-        lua_ls = {
-          -- cmd = {...},
-          -- filetypes = { ...},
-          -- capabilities = {},
-          settings = {
-            Lua = {
-              completion = {
-                callSnippet = 'Replace',
-              },
-              -- fz: add Lua subkey 'diagnostics' to hide undefined global 'vim' warnings
-              -- NOTE: moved to vim.lsp.config[...] as this no longer worked (due to autoloading via Mason?)
-              diagnostics = { globals = { 'vim' } },
-              -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-              -- diagnostics = { disable = { 'missing-fields' } },
-            },
-          },
-        },
+        -- lua_ls = {
+        --   -- cmd = {...},
+        --   -- filetypes = {...},
+        --   -- capabilities = {},
+        --   settings = {
+        --     Lua = {
+        --       completion = {
+        --         callSnippet = 'Replace',
+        --       },
+        --       -- fz: add Lua subkey 'diagnostics' to hide undefined global 'vim' warnings
+        --       diagnostics = { globals = { 'vim' } },
+        --       -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
+        --       -- diagnostics = { disable = { 'missing-fields' } },
+        --     },
+        --   },
+        -- },
       }
 
       -- Ensure the servers and tools above are installed
