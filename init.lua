@@ -629,6 +629,14 @@ require('lazy').setup({
         vim.lsp.enable 'nushell'
       end
 
+      -- fz: we need tree-sitter-cli installed to allow new treesitter to compile parsers
+      require('mason').setup()
+
+      local mr = require 'mason-registry'
+      if not mr.is_installed 'tree-sitter-cli' then
+        mr.get_package('tree-sitter-cli'):install()
+      end
+
       -- // helper to check existence of binary before enabling lsp
       -- local function setup_if_exists(server, binary, config)
       --   if vim.fn.executable(binary or server) == 1 then
