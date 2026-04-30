@@ -204,6 +204,23 @@ vim.keymap.set('n', '<leader>ol', ':lopen<cr>', { silent = true, desc = '[O]pen 
 vim.keymap.set('n', '<leader>ocq', ':cclose<cr>', { silent = true, desc = '[C]lose [Q]uickfix list' })
 vim.keymap.set('n', '<leader>ocl', ':lclose<cr>', { silent = true, desc = '[C]lose [L]ocation list' })
 
+-- fz: new 0.12+ treesitter incremental selection
+vim.keymap.set({ 'x', 'o' }, '<A-.>', function()
+  if vim.treesitter.get_parser(nil, nil, { error = false }) then
+    require('vim.treesitter._select').select_parent(vim.v.count1)
+  else
+    vim.lsp.buf.selection_range(vim.v.count1)
+  end
+end, { desc = 'Select parent (outer) node' })
+
+vim.keymap.set({ 'x', 'o' }, '<A-,>', function()
+  if vim.treesitter.get_parser(nil, nil, { error = false }) then
+    require('vim.treesitter._select').select_child(vim.v.count1)
+  else
+    vim.lsp.buf.selection_range(-vim.v.count1)
+  end
+end, { desc = 'Select child (inner) node' })
+
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
