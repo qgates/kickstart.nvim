@@ -1186,8 +1186,13 @@ require('lazy').setup({
         -- in case there is no indent query, the indentexpr will fallback to the vim's built in one
         local has_indent_query = vim.treesitter.query.get(language, 'indents') ~= nil
 
-        -- enables treesitter based indentation
-        if has_indent_query then
+        -- fz: define languages to exclude from treesitter indentation
+        local excluded_languages = {
+          'ruby',
+        }
+
+        -- enables treesitter based indentation if supported and allowed
+        if has_indent_query and not excluded_languages[language] ~= nil then
           vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
         end
       end
