@@ -438,11 +438,22 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
+        defaults = {
+          mappings = {
+            i = {
+              ['<C-Left>'] = 'preview_scrolling_left',
+              ['<C-Right>'] = 'preview_scrolling_right',
+              ['<C-Up>'] = 'preview_scrolling_up',
+              ['<C-Down>'] = 'preview_scrolling_down',
+            },
+            n = {
+              ['<C-Left>'] = 'preview_scrolling_left',
+              ['<C-Up>'] = 'preview_scrolling_up',
+              ['<C-Down>'] = 'preview_scrolling_down',
+              ['<C-Right>'] = 'preview_scrolling_right',
+            },
+          },
+        },
         -- pickers = {}
         extensions = {
           ['ui-select'] = {
@@ -1381,7 +1392,7 @@ end
 vim.keymap.set('n', '<C-W>6', toggle_nicewindows, { desc = 'Nice Windows' })
 
 vim.cmd.colorscheme 'catppuccin-frappe'
-vim.cmd.highlight 'Visual guibg=#3A3E4F'
+vim.cmd.highlight 'Visual guibg=#3A3E4F gui=NONE'
 vim.cmd.highlight 'WinSeparator guifg=#3A3E4F'
 vim.cmd.highlight 'PmenuSel guibg=#64647C guifg=none'
 vim.cmd.highlight 'Error cterm=undercurl ctermfg=red ctermbg=NONE guifg="#FF5555" guibg=NONE'
@@ -1390,8 +1401,17 @@ vim.opt.listchars = { tab = '» ', trail = '·', space = '·', nbsp = '␣' }
 vim.opt.list = false
 vim.opt.relativenumber = true
 
+-- enable wrapping by words in markdown files
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'markdown',
+  callback = function()
+    vim.opt_local.wrap = true
+    vim.opt_local.linebreak = true
+  end,
+})
+
 vim.api.nvim_create_user_command('FzFold', function()
-  vim.cmd 'set foldexpr=nvim_treesitter#foldexpr()'
+  vim.cmd 'set foldexpr=v:lua.vim.treesitter.foldexpr()'
   vim.cmd 'set fillchars=fold:\\ '
   vim.cmd 'set foldmethod=expr'
   vim.cmd 'set foldtext=""'
